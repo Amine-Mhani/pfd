@@ -226,67 +226,7 @@ public class Alt extends Application {
         tcas.getChildren().add(otherAircraft);
 
 
-        monitored.setOnMouseMoved(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                pl2.setLayoutX(event.getX());
-                pl2.setLayoutY(event.getY()-50);
-                double x = onDxChange(event.getX());
-                double y = onDYChange(event.getY());
-                X = x;
-                Y = y;
-                System.out.println("moved");
-                String msg =
-                        "(x: " + event.getX() + ", y: " + event.getY() + ") -- " +
-                                "(sceneX: " + event.getSceneX() + ", sceneY: " + event.getSceneY() + ") -- " +
-                                "(screenX: " + event.getScreenX() + ", screenY: " + event.getScreenY() + ")";
 
-                Point2D plTopLeftOnScreen = pl.localToScreen(0, 0);
-                double dx = event.getScreenX() - plTopLeftOnScreen.getX();
-                double dy = event.getScreenY() - plTopLeftOnScreen.getY();
-                distance = Math.sqrt(dx * dx + dy * dy) - 218;
-
-                //System.out.println("dx : "+dx+", dy : "+dy);
-
-                if (distance < 200) {
-
-                    //warning.play();
-                    translate.setToY(120);
-                    translate.play();
-                    otherAircraft.setFill(Color.RED);
-                    //scene.setFill(Color.RED);
-
-                } else if (distance < 500) {
-
-                    //warning.stop();
-                    translate.setToY(50);
-                    translate.play();
-
-                    otherAircraft.setFill(Color.YELLOW);
-                    //scene.setFill(Color.BLACK);
-                } else {
-
-                    //warning.stop();
-                    translate.setToY(0);
-                    translate.play();
-
-                    otherAircraft.setFill(Color.GREEN);
-                    //scene.setFill(Color.BLACK);
-                }
-
-
-
-                /**if (dx>=-17 && dx<=-14){
-                    if (dy>=93.00000000000003 && dy<=95.00000000000003){
-                        System.out.println("fuelling");
-                    }
-                }*/
-
-                //dx = -15
-                //dy = 89.00000000000003
-                //System.out.println("Distance to pl: " + distance);
-            }
-        });
 
         TranslateTransition transition = new TranslateTransition(Duration.seconds(0.5), needle);
         TranslateTransition transition2 = new TranslateTransition(Duration.seconds(0.5), needle2);
@@ -446,6 +386,104 @@ public class Alt extends Application {
 
         root.setStyle("-fx-background-color: transparent; -fx-padding: 10px;");
 
+        monitored.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                pl2.setLayoutX(event.getX());
+                pl2.setLayoutY(event.getY()-50);
+                double x = onDxChange(event.getX());
+                double y = onDYChange(event.getY());
+                X = x;
+                Y = y;
+                System.out.println("moved");
+                String msg =
+                        "(x: " + event.getX() + ", y: " + event.getY() + ") -- " +
+                                "(sceneX: " + event.getSceneX() + ", sceneY: " + event.getSceneY() + ") -- " +
+                                "(screenX: " + event.getScreenX() + ", screenY: " + event.getScreenY() + ")";
+
+                Point2D plTopLeftOnScreen = pl.localToScreen(0, 0);
+                double dx = event.getScreenX() - plTopLeftOnScreen.getX();
+                double dy = event.getScreenY() - plTopLeftOnScreen.getY();
+                distance = Math.sqrt(dx * dx + dy * dy) - 218;
+
+                //System.out.println("dx : "+dx+", dy : "+dy);
+
+                if (distance < 200) {
+
+                    //warning.play();
+                    translate.setToY(120);
+                    translate.play();
+                    otherAircraft.setFill(Color.RED);
+                    //scene.setFill(Color.RED);
+
+                } else if (distance < 500) {
+
+                    //warning.stop();
+                    translate.setToY(50);
+                    translate.play();
+
+                    otherAircraft.setFill(Color.YELLOW);
+                    //scene.setFill(Color.BLACK);
+                } else {
+
+                    //warning.stop();
+                    translate.setToY(0);
+                    translate.play();
+
+                    otherAircraft.setFill(Color.GREEN);
+                    //scene.setFill(Color.BLACK);
+                }
+
+                if(!((needHeat1.getRotate()+10)>180)) {
+                    Timeline timeline = new Timeline(
+                            new KeyFrame(Duration.seconds(0.5),
+                                    new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
+                                    new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
+
+                            )
+                    );
+                    timeline.play();
+
+                    heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+1)));
+                    heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+1)));
+
+                    if(needHeat1.getRotate()+1>130){
+                        lin3.setStroke(Color.RED);
+                        cir3.setStroke(Color.RED);
+                        lin4.setStroke(Color.RED);
+                        cir4.setStroke(Color.RED);
+
+                        //warning.play();
+                    }else if(needHeat1.getRotate()+1>110){
+                        lin3.setStroke(Color.YELLOW);
+                        cir3.setStroke(Color.YELLOW);
+                        lin4.setStroke(Color.YELLOW);
+                        cir4.setStroke(Color.YELLOW);
+
+                        warning.stop();
+                    }else{
+                        lin3.setStroke(Color.GREEN);
+                        cir3.setStroke(Color.GREEN);
+                        lin4.setStroke(Color.GREEN);
+                        cir4.setStroke(Color.GREEN);
+                    }
+
+                }
+
+
+
+                /**if (dx>=-17 && dx<=-14){
+                 if (dy>=93.00000000000003 && dy<=95.00000000000003){
+                 System.out.println("fuelling");
+                 }
+                 }*/
+
+                //dx = -15
+                //dy = 89.00000000000003
+                //System.out.println("Distance to pl: " + distance);
+            }
+        });
+
         monitored.setOnMouseClicked(new EventHandler<MouseEvent>(){
 
             @Override
@@ -532,6 +570,23 @@ public class Alt extends Application {
 
                         }
                     }
+                } else if (mouseEvent.getButton() == MouseButton.MIDDLE) {
+                    Timeline timeline2 = new Timeline(
+                            new KeyFrame(Duration.seconds(0.5),
+                                    new KeyValue(needHeat1.rotateProperty(), 82.22),
+                                    new KeyValue(needHeat2.rotateProperty(), 82.22)
+                            )
+                    );
+                    timeline2.play();
+
+                    lin3.setStroke(Color.GREEN);
+                    lin4.setStroke(Color.GREEN);
+                    cir3.setStroke(Color.GREEN);
+                    cir4.setStroke(Color.GREEN);
+
+
+                    heat1.setText("82");
+                    heat2.setText("82");
                 }
             }
         });
