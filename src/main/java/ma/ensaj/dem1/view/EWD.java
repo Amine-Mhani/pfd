@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 
@@ -88,16 +89,36 @@ public class EWD extends Application {
     int helper = 0;
     int helper2 = 0;
 
+    private boolean isAuto = false;
+
     double X;
     double Y;
     double dx;
     double dy;
+
+
+    String autoPilotAudioFile = "autopilot.wav";
+    String manualFile = "manual.wav";
+
+
+    Media autoPilot = new Media(new File(autoPilotAudioFile).toURI().toString());
+    Media manual = new Media(new File(manualFile).toURI().toString());
+
+    MediaPlayer autoPilotPlayer = new MediaPlayer(autoPilot);
+    MediaPlayer manualPlayer = new MediaPlayer(manual);
+
+    ScrollPane scp = createScrollPane(createImageView(split));
 
     private Circle otherAircraft = new Circle(400, 150, 5, Color.GREEN);
 
     Node needPerc1, needPerc2, needHeat1, needHeat2;
 
     TranslateTransition translate = new TranslateTransition(Duration.seconds(1), otherAircraft);
+
+    TranslateTransition gloTrans, gloTrans2;
+
+    Line nee, nee2;
+
 
 
 
@@ -138,6 +159,7 @@ public class EWD extends Application {
         monitored.setGraphic(planes);
 
 
+
         // Scale line
         Line scaleLine = new Line(CENTER_X, CENTER_Y, CENTER_X, CENTER_Y - 400);
         scaleLine.setStrokeWidth(3);
@@ -154,12 +176,17 @@ public class EWD extends Application {
         needle.setRotate(90);
         needle.setTranslateY(Translation);
 
+        nee = needle;
+
+
         // Needle
         Line needle2 = new Line(CENTER_X, 100, CENTER_X, 0);
         needle2.setStroke(Color.RED);
         needle2.setStrokeWidth(4);
         needle2.setRotate(90);
         needle2.setTranslateY(Translation);
+
+        nee2 = needle2;
 
 
 
@@ -204,6 +231,10 @@ public class EWD extends Application {
             public void handle(MouseEvent event) {
                 pl2.setLayoutX(event.getX());
                 pl2.setLayoutY(event.getY()-50);
+                double x = onDxChange(event.getX());
+                double y = onDYChange(event.getY());
+                X = x;
+                Y = y;
                 System.out.println("moved");
                 String msg =
                         "(x: " + event.getX() + ", y: " + event.getY() + ") -- " +
@@ -215,7 +246,7 @@ public class EWD extends Application {
                 double dy = event.getScreenY() - plTopLeftOnScreen.getY();
                 distance = Math.sqrt(dx * dx + dy * dy) - 218;
 
-                System.out.println("dx : "+dx+", dy : "+dy);
+                //System.out.println("dx : "+dx+", dy : "+dy);
 
                 if (distance < 200) {
 
@@ -257,12 +288,41 @@ public class EWD extends Application {
             }
         });
 
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(0.5), needle);
+        TranslateTransition transition2 = new TranslateTransition(Duration.seconds(0.5), needle2);
+        gloTrans = transition;
+        gloTrans2 = transition2;
+        transition.setInterpolator(Interpolator.EASE_OUT);
+        transition2.setInterpolator(Interpolator.EASE_OUT);
+
+        monitored.setOnMouseClicked(new EventHandler<MouseEvent>(){
+
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                System.out.println("mouse button : "+mouseEvent.getButton());
+                if(mouseEvent.getButton() == MouseButton.PRIMARY){
+                    if(needle.getTranslateY() != 0){
+                        //needle.setTranslateY(needle.getTranslateY()-5);
+                        transition.setToY(needle.getTranslateY()-100);
+                        transition.play();
+                    }
+                } else if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+                    if(needle.getTranslateY() != 400){
+                        //needle.setTranslateY(needle.getTranslateY()-5);
+                        transition.setToY(needle.getTranslateY()+100);
+                        transition.play();
+                    }
+                }
+            }
+        });
+
 
         scale.setGraphic(new Group(scaleLine, tickPane, needle));
         scale2.setGraphic(new Group(scaleLine2, tickPane2, needle2));
 
         StackPane stackPane = new StackPane();
-        ScrollPane scrollPane = createScrollPane(createImageView(split));
+        ScrollPane scrollPane = scp;
+
 
         stackPane.getChildren().addAll(scrollPane, new ImageView(indic));
         pfd.setGraphic(stackPane);
@@ -406,332 +466,343 @@ public class EWD extends Application {
         root.setStyle("-fx-background-color: transparent; -fx-padding: 10px;");
 
 
-        TranslateTransition transition = new TranslateTransition(Duration.seconds(0.5), needle);
-        TranslateTransition transition2 = new TranslateTransition(Duration.seconds(0.5), needle2);
-        transition.setInterpolator(Interpolator.EASE_OUT);
-        transition2.setInterpolator(Interpolator.EASE_OUT);
+
+
+
 
         scene.setOnKeyPressed(event -> {
             double vvalue = scrollPane.getVvalue();
+            if (isAuto){
+                autoPilotPlayer.stop();
 
-            switch (event.getCode()) {
-                case UP:
-                    robot.mouseMove(robot.getMouseX(), robot.getMouseY() - 10);
-                    double targetVvalueUp = vvalue - delta;
-                    animateScrollPaneVvalue(scrollPane, targetVvalueUp);
+                switch (event.getCode()) {
+                    case G:
+                        isAuto = !isAuto;
+                        System.out.println("switch to manual");
 
-                    if(!((needPerc1.getRotate()+10)>180)) {
-                        Timeline timeline = new Timeline(
-                                new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needPerc1.rotateProperty(), needPerc1.getRotate() + 10),
-                                        new KeyValue(needPerc2.rotateProperty(), needPerc2.getRotate() + 10)
+                        manualPlayer.play();
 
-                                )
-                        );
-                        timeline.play();
-                        perc1.setText(String.valueOf(Math.round(needPerc1.getRotate()+10)));
-                        perc2.setText(String.valueOf(Math.round(needPerc2.getRotate()+10)));
+                        break;
+                }
+            }else{
+                manualPlayer.stop();
 
-                        if(needPerc1.getRotate()+10>120){
-                            lin1.setStroke(Color.RED);
-                            cir1.setStroke(Color.RED);
-                            lin2.setStroke(Color.RED);
-                            cir2.setStroke(Color.RED);
+                switch (event.getCode()) {
+                    case G:
+                        isAuto = !isAuto;
+                        System.out.println("switch to auto ");
+                        animateScrollPaneVvalue(scrollPane, 0.5);
+                        autoPilotPlayer.play();
+                        break;
+                    case UP:
+                        robot.mouseMove(robot.getMouseX(), robot.getMouseY() - 10);
+                        double targetVvalueUp = vvalue - delta;
+                        animateScrollPaneVvalue(scrollPane, targetVvalueUp);
 
-                            //speed.play();
-                        }else if(needPerc1.getRotate()+10>90){
-                            lin1.setStroke(Color.YELLOW);
-                            cir1.setStroke(Color.YELLOW);
-                            lin2.setStroke(Color.YELLOW);
-                            cir2.setStroke(Color.YELLOW);
+                        if(!((needPerc1.getRotate()+10)>180)) {
+                            Timeline timeline = new Timeline(
+                                    new KeyFrame(Duration.seconds(0.5),
+                                            new KeyValue(needPerc1.rotateProperty(), needPerc1.getRotate() + 10),
+                                            new KeyValue(needPerc2.rotateProperty(), needPerc2.getRotate() + 10)
 
-                            //speed.stop();
-                        }else{
-                            lin1.setStroke(Color.GREEN);
-                            cir1.setStroke(Color.GREEN);
-                            lin2.setStroke(Color.GREEN);
-                            cir2.setStroke(Color.GREEN);
+                                    )
+                            );
+                            timeline.play();
+                            perc1.setText(String.valueOf(Math.round(needPerc1.getRotate()+10)));
+                            perc2.setText(String.valueOf(Math.round(needPerc2.getRotate()+10)));
+
+                            if(needPerc1.getRotate()+10>120){
+                                lin1.setStroke(Color.RED);
+                                cir1.setStroke(Color.RED);
+                                lin2.setStroke(Color.RED);
+                                cir2.setStroke(Color.RED);
+
+                                //warning.play();
+                            }else if(needPerc1.getRotate()+10>90){
+                                lin1.setStroke(Color.YELLOW);
+                                cir1.setStroke(Color.YELLOW);
+                                lin2.setStroke(Color.YELLOW);
+                                cir2.setStroke(Color.YELLOW);
+
+                                warning.stop();
+                            }else{
+                                lin1.setStroke(Color.GREEN);
+                                cir1.setStroke(Color.GREEN);
+                                lin2.setStroke(Color.GREEN);
+                                cir2.setStroke(Color.GREEN);
+                            }
+
+
+                        }
+
+                        if(!((needHeat1.getRotate()+10)>180)) {
+                            Timeline timeline = new Timeline(
+                                    new KeyFrame(Duration.seconds(0.5),
+                                            new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
+                                            new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
+
+                                    )
+                            );
+                            timeline.play();
+
+                            heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+5)));
+                            heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+5)));
+
+                            if(needHeat1.getRotate()+5>130){
+                                lin3.setStroke(Color.RED);
+                                cir3.setStroke(Color.RED);
+                                lin4.setStroke(Color.RED);
+                                cir4.setStroke(Color.RED);
+
+                                //warning.play();
+                            }else if(needHeat1.getRotate()+5>110){
+                                lin3.setStroke(Color.YELLOW);
+                                cir3.setStroke(Color.YELLOW);
+                                lin4.setStroke(Color.YELLOW);
+                                cir4.setStroke(Color.YELLOW);
+
+                                warning.stop();
+                            }else{
+                                lin3.setStroke(Color.GREEN);
+                                cir3.setStroke(Color.GREEN);
+                                lin4.setStroke(Color.GREEN);
+                                cir4.setStroke(Color.GREEN);
+                            }
+
                         }
 
 
-                    }
 
-                    if(!((needHeat1.getRotate()+10)>180)) {
-                        Timeline timeline = new Timeline(
-                                new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
-                                        new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
-
-                                )
-                        );
-                        timeline.play();
-
-                        heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+5)));
-                        heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+5)));
-
-                        if(needHeat1.getRotate()+5>130){
-                            lin3.setStroke(Color.RED);
-                            cir3.setStroke(Color.RED);
-                            lin4.setStroke(Color.RED);
-                            cir4.setStroke(Color.RED);
-
-                            //heat.play();
-                        }else if(needHeat1.getRotate()+5>110){
-                            lin3.setStroke(Color.YELLOW);
-                            cir3.setStroke(Color.YELLOW);
-                            lin4.setStroke(Color.YELLOW);
-                            cir4.setStroke(Color.YELLOW);
-
-                            //heat.stop();
-                        }else{
-                            lin3.setStroke(Color.GREEN);
-                            cir3.setStroke(Color.GREEN);
-                            lin4.setStroke(Color.GREEN);
-                            cir4.setStroke(Color.GREEN);
-
-                            //heat.stop();
+                        if(needle.getTranslateY() != 0){
+                            //needle.setTranslateY(needle.getTranslateY()-5);
+                            transition.setToY(needle.getTranslateY()-25);
+                            transition.play();
+                        }
+                        if(needle2.getTranslateY() != 0){
+                            //needle.setTranslateY(needle.getTranslateY()-5);
+                            transition2.setToY(needle2.getTranslateY()-25);
+                            transition2.play();
                         }
 
-                    }
+                        if(helper!=11)
+                            helper++;
+
+                        break;
+                    case DOWN:
+                        robot.mouseMove(robot.getMouseX(), robot.getMouseY() + 10);
+                        //scrollPane.setVvalue(vvalue + delta);
+
+                        if(!((needHeat1.getRotate()+10)>180)) {
+                            Timeline timeline = new Timeline(
+                                    new KeyFrame(Duration.seconds(0.5),
+                                            new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
+                                            new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
+
+                                    )
+                            );
+                            timeline.play();
+
+                            heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+5)));
+                            heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+5)));
+
+                            if(needHeat1.getRotate()+5>130){
+                                lin3.setStroke(Color.RED);
+                                cir3.setStroke(Color.RED);
+                                lin4.setStroke(Color.RED);
+                                cir4.setStroke(Color.RED);
+
+                                //warning.play();
+                            }else if(needHeat1.getRotate()+5>110){
+                                lin3.setStroke(Color.YELLOW);
+                                cir3.setStroke(Color.YELLOW);
+                                lin4.setStroke(Color.YELLOW);
+                                cir4.setStroke(Color.YELLOW);
+
+                                warning.stop();
+                            }else{
+                                lin3.setStroke(Color.GREEN);
+                                cir3.setStroke(Color.GREEN);
+                                lin4.setStroke(Color.GREEN);
+                                cir4.setStroke(Color.GREEN);
+                            }
+                        }
+
+                        if(needPerc1.getRotate()>20) {
+                            Timeline timeline = new Timeline(
+                                    new KeyFrame(Duration.seconds(0.5),
+                                            new KeyValue(needPerc1.rotateProperty(), needPerc1.getRotate() - 10),
+                                            new KeyValue(needPerc2.rotateProperty(), needPerc2.getRotate() - 10)
+                                    )
+                            );
+                            timeline.play();
+
+                            perc1.setText(String.valueOf(Math.round(needPerc1.getRotate()-10)));
+                            perc2.setText(String.valueOf(Math.round(needPerc2.getRotate()-10)));
+
+                            if(needPerc1.getRotate()-10>120){
+                                lin1.setStroke(Color.RED);
+                                cir1.setStroke(Color.RED);
+                                lin2.setStroke(Color.RED);
+                                cir2.setStroke(Color.RED);
+
+                                //warning.play();
+                            }else if(needPerc1.getRotate()-10>90){
+                                lin1.setStroke(Color.YELLOW);
+                                cir1.setStroke(Color.YELLOW);
+                                lin2.setStroke(Color.YELLOW);
+                                cir2.setStroke(Color.YELLOW);
+
+                                warning.stop();
+                            }else {
+                                lin1.setStroke(Color.GREEN);
+                                cir1.setStroke(Color.GREEN);
+                                lin2.setStroke(Color.GREEN);
+                                cir2.setStroke(Color.GREEN);
+
+                            }
+                        }
 
 
 
-                    if(needle.getTranslateY() != 0){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition.setToY(needle.getTranslateY()-25);
+
+                        double targetVvalueDown = vvalue + delta;
+                        animateScrollPaneVvalue(scrollPane, targetVvalueDown);
+                        if(needle.getTranslateY() != 0){
+                            //needle.setTranslateY(needle.getTranslateY()-5);
+                            transition.setToY(needle.getTranslateY()-25);
+                            transition.play();
+                        }
+
+                        if(needle2.getTranslateY() != 400){
+                            //needle.setTranslateY(needle.getTranslateY()-5);
+                            transition2.setToY(needle2.getTranslateY()+25);
+                            transition2.play();
+                        }
+
+                        if(helper!=0)
+                            helper--;
+
+                        break;
+                    case LEFT:
+                        System.out.println("ne "+needle2.getTranslateY());
+                        //needle.setTranslateY(350);
+                        transition.setToY(400);
                         transition.play();
-                    }
-                    if(needle2.getTranslateY() != 0){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition2.setToY(needle2.getTranslateY()-25);
-                        transition2.play();
-                    }
 
-                    if(helper!=8)
-                        helper++;
 
-                    break;
-                case DOWN:
-                    robot.mouseMove(robot.getMouseX(), robot.getMouseY() + 10);
-                    //scrollPane.setVvalue(vvalue + delta);
-
-                    if(!((needHeat1.getRotate()+10)>180)) {
-                        Timeline timeline = new Timeline(
+                        Timeline timeline2 = new Timeline(
                                 new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
-                                        new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
-
+                                        new KeyValue(needHeat1.rotateProperty(), 82.22),
+                                        new KeyValue(needHeat2.rotateProperty(), 82.22)
                                 )
                         );
-                        timeline.play();
+                        timeline2.play();
 
-                        heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+5)));
-                        heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+5)));
+                        lin3.setStroke(Color.GREEN);
+                        lin4.setStroke(Color.GREEN);
+                        cir3.setStroke(Color.GREEN);
+                        cir4.setStroke(Color.GREEN);
 
-                        if(needHeat1.getRotate()+5>130){
-                            lin3.setStroke(Color.RED);
-                            cir3.setStroke(Color.RED);
-                            lin4.setStroke(Color.RED);
-                            cir4.setStroke(Color.RED);
 
-                            //heat.play();
-                        }else if(needHeat1.getRotate()+5>110){
-                            lin3.setStroke(Color.YELLOW);
-                            cir3.setStroke(Color.YELLOW);
-                            lin4.setStroke(Color.YELLOW);
-                            cir4.setStroke(Color.YELLOW);
+                        heat1.setText("82");
+                        heat2.setText("82");
 
-                            //heat.stop();
-                        }else{
-                            lin3.setStroke(Color.GREEN);
-                            cir3.setStroke(Color.GREEN);
-                            lin4.setStroke(Color.GREEN);
-                            cir4.setStroke(Color.GREEN);
 
-                            //heat.stop();
+
+                        break;
+                    case RIGHT:
+                        robot.mouseMove(robot.getMouseX() + 10, robot.getMouseY());
+                        if(needle.getTranslateY() != 0){
+                            //needle.setTranslateY(needle.getTranslateY()-5);
+                            transition.setToY(needle.getTranslateY()-25);
+                            transition.play();
                         }
-                    }
 
-                    if(needPerc1.getRotate()>20) {
-                        Timeline timeline = new Timeline(
-                                new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needPerc1.rotateProperty(), needPerc1.getRotate() - 10),
-                                        new KeyValue(needPerc2.rotateProperty(), needPerc2.getRotate() - 10)
-                                )
-                        );
-                        timeline.play();
+                        if(!((needHeat1.getRotate()+10)>180)) {
+                            Timeline timeline = new Timeline(
+                                    new KeyFrame(Duration.seconds(0.5),
+                                            new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
+                                            new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
+                                    )
+                            );
+                            timeline.play();
 
-                        perc1.setText(String.valueOf(Math.round(needPerc1.getRotate()-10)));
-                        perc2.setText(String.valueOf(Math.round(needPerc2.getRotate()-10)));
+                            heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+5)));
+                            heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+5)));
 
-                        if(needPerc1.getRotate()-10>120){
-                            lin1.setStroke(Color.RED);
-                            cir1.setStroke(Color.RED);
-                            lin2.setStroke(Color.RED);
-                            cir2.setStroke(Color.RED);
+                            if(needHeat1.getRotate()+5>130){
+                                lin3.setStroke(Color.RED);
+                                cir3.setStroke(Color.RED);
+                                lin4.setStroke(Color.RED);
+                                cir4.setStroke(Color.RED);
 
-                            //speed.play();
-                        }else if(needPerc1.getRotate()-10>90){
-                            lin1.setStroke(Color.YELLOW);
-                            cir1.setStroke(Color.YELLOW);
-                            lin2.setStroke(Color.YELLOW);
-                            cir2.setStroke(Color.YELLOW);
+                                //warning.play();
+                            }else if(needHeat1.getRotate()+5>110){
+                                lin3.setStroke(Color.YELLOW);
+                                cir3.setStroke(Color.YELLOW);
+                                lin4.setStroke(Color.YELLOW);
+                                cir4.setStroke(Color.YELLOW);
 
-                            //speed.stop();
-                        }else {
-                            lin1.setStroke(Color.GREEN);
-                            cir1.setStroke(Color.GREEN);
-                            lin2.setStroke(Color.GREEN);
-                            cir2.setStroke(Color.GREEN);
-
-                            //speed.stop();
-
+                                warning.stop();
+                            }else{
+                                lin3.setStroke(Color.GREEN);
+                                cir3.setStroke(Color.GREEN);
+                                lin4.setStroke(Color.GREEN);
+                                cir4.setStroke(Color.GREEN);
+                            }
                         }
-                    }
 
 
 
 
-                    double targetVvalueDown = vvalue + delta;
-                    animateScrollPaneVvalue(scrollPane, targetVvalueDown);
-                    if(needle.getTranslateY() != 0){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition.setToY(needle.getTranslateY()-25);
-                        transition.play();
-                    }
-
-                    if(needle2.getTranslateY() != 400){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition2.setToY(needle2.getTranslateY()+25);
-                        transition2.play();
-                    }
-
-                    if(helper!=0)
-                        helper--;
-
-                    break;
-                case LEFT:
-                    System.out.println("ne "+needle2.getTranslateY());
-                    //needle.setTranslateY(350);
-                    transition.setToY(400);
-                    transition.play();
 
 
-                    Timeline timeline2 = new Timeline(
-                            new KeyFrame(Duration.seconds(0.5),
-                                    new KeyValue(needHeat1.rotateProperty(), 82.22),
-                                    new KeyValue(needHeat2.rotateProperty(), 82.22)
-                            )
-                    );
-                    timeline2.play();
-
-                    lin3.setStroke(Color.GREEN);
-                    lin4.setStroke(Color.GREEN);
-                    cir3.setStroke(Color.GREEN);
-                    cir4.setStroke(Color.GREEN);
-
-                    //heat.stop();
-
-
-                    heat1.setText("82");
-                    heat2.setText("82");
-
-
-
-                    break;
-                case RIGHT:
-                    robot.mouseMove(robot.getMouseX() + 10, robot.getMouseY());
-                    if(needle.getTranslateY() != 0){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition.setToY(needle.getTranslateY()-25);
-                        transition.play();
-                    }
-
-                    if(!((needHeat1.getRotate()+10)>180)) {
-                        Timeline timeline = new Timeline(
-                                new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
-                                        new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
-                                )
-                        );
-                        timeline.play();
-
-                        heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+5)));
-                        heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+5)));
-
-                        if(needHeat1.getRotate()+5>130){
-                            lin3.setStroke(Color.RED);
-                            cir3.setStroke(Color.RED);
-                            lin4.setStroke(Color.RED);
-                            cir4.setStroke(Color.RED);
-
-                            //heat.play();
-                        }else if(needHeat1.getRotate()+5>110){
-                            lin3.setStroke(Color.YELLOW);
-                            cir3.setStroke(Color.YELLOW);
-                            lin4.setStroke(Color.YELLOW);
-                            cir4.setStroke(Color.YELLOW);
-
-                            //heat.stop();
-                        }else{
-                            lin3.setStroke(Color.GREEN);
-                            cir3.setStroke(Color.GREEN);
-                            lin4.setStroke(Color.GREEN);
-                            cir4.setStroke(Color.GREEN);
-
-                            //heat.stop();
+                        System.out.println("v : "+vvalue);
+                        if(vvalue > 0.5) {
+                            vvalue = 0.5;
+                            //scrollPane.setVvalue(vvalue);
+                            animateScrollPaneVvalue(scrollPane, vvalue);
                         }
-                    }
+                        else if (vvalue < 0.5) {
+                            vvalue = 0.5;
+                            //scrollPane.setVvalue(vvalue);
+                            animateScrollPaneVvalue(scrollPane, vvalue);
+                        }
 
+                    case Q:
+                        robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
+                        pl.setTranslateX(pl.getTranslateX()-10);
+                        break;
+                    case S:
+                        robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
+                        pl.setTranslateY(pl.getTranslateY()+10);
 
+                        if(helper2!=0)
+                            helper2--;
+                        break;
+                    case D:
+                        robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
+                        pl.setTranslateX(pl.getTranslateX()+10);
+                        break;
+                    case Z:
+                        robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
+                        pl.setTranslateY(pl.getTranslateY()-10);
 
+                        if(helper2!=11)
+                            helper2++;
+                        break;
+                    case T:
+                        if(pl.getImage() == plane2){
+                            pl.setImage(plane3);
+                        } else if (pl.getImage() == plane3) {
+                            pl.setImage(plane2);
+                        }
 
+                        break;
+                    default:
+                        break;
+                }
 
-
-                    System.out.println("v : "+vvalue);
-                    if(vvalue > 0.5) {
-                        vvalue = 0.5;
-                        //scrollPane.setVvalue(vvalue);
-                        animateScrollPaneVvalue(scrollPane, vvalue);
-                    }
-                    else if (vvalue < 0.5) {
-                        vvalue = 0.5;
-                        //scrollPane.setVvalue(vvalue);
-                        animateScrollPaneVvalue(scrollPane, vvalue);
-                    }
-
-                case Q:
-                    robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
-                    pl.setTranslateX(pl.getTranslateX()-10);
-                    break;
-                case S:
-                    robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
-                    pl.setTranslateY(pl.getTranslateY()+10);
-
-                    if(helper2!=0)
-                        helper2--;
-                    break;
-                case D:
-                    robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
-                    pl.setTranslateX(pl.getTranslateX()+10);
-                    break;
-                case Z:
-                    robot.mouseMove(robot.getMouseX(), robot.getMouseY()+1);
-                    pl.setTranslateY(pl.getTranslateY()-10);
-
-                    if(helper2!=8)
-                        helper2++;
-                    break;
-                case T:
-                    if(pl.getImage() == plane2){
-                        pl.setImage(plane3);
-                    } else if (pl.getImage() == plane3) {
-                        pl.setImage(plane2);
-                    }
-
-                    break;
-                default:
-                    break;
             }
         });
 
@@ -757,6 +828,71 @@ public class EWD extends Application {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    public double onDxChange(double diffx){
+        double ddx = X + diffx;
+        System.out.println("X : "+diffx);
+        return diffx;
+    }
+
+    public double onDYChange(double diffy){
+        double ddy = Y + diffy;
+        double dif = Y - diffy;
+        System.out.println("nee2: "+nee2.getTranslateY());
+        double vvalue = scp.getVvalue();
+        double targetVvalueUp = vvalue + ddy;
+        //System.out.println("ddy : "+targetVvalueUp/1000+" vvalue : "+scp.getVvalue());
+        if(targetVvalueUp/1000 > 0.09 || -0.09 > targetVvalueUp/1000) {
+            animateScrollPaneVvalue(scp, targetVvalueUp / 1000);
+        }else{
+            //System.out.println("ok ok ");
+            animateScrollPaneVvalue(scp, 0.5);
+            //System.out.println("vvalue : "+scp.getVvalue());
+        }
+        if(dif > 0) {
+            System.out.println("up");
+
+            if ((diffy <= 400) && (diffy >= 0)) {
+                //needle.setTranslateY(needle.getTranslateY()-5);
+                gloTrans2.setToY(diffy);
+                gloTrans2.play();
+            }
+            if (nee2.getTranslateY() > 0 && nee2.getTranslateY() < 100) {
+                helper = 4;
+            } else if (nee2.getTranslateY() > 100 && nee2.getTranslateY() < 200) {
+                helper = 3;
+            } else if (nee2.getTranslateY() > 200 && nee2.getTranslateY() < 300) {
+                helper = 2;
+            } else if (nee2.getTranslateY() > 300 && nee2.getTranslateY() < 400) {
+                helper = 1;
+            } else if (nee2.getTranslateY() == 400) {
+                helper = 0;
+            }
+        } else{
+            System.out.println("down");
+
+
+            if((diffy <= 400) && (diffy >= 0)){
+                //needle.setTranslateY(needle.getTranslateY()-5);
+                gloTrans2.setToY(diffy);
+                gloTrans2.play();
+            }
+            if (nee2.getTranslateY() > 0 && nee2.getTranslateY() < 100) {
+                helper = 4;
+            } else if (nee2.getTranslateY() > 100 && nee2.getTranslateY() < 200) {
+                helper = 3;
+            } else if (nee2.getTranslateY() > 200 && nee2.getTranslateY() < 300) {
+                helper = 2;
+            } else if (nee2.getTranslateY() > 300 && nee2.getTranslateY() < 400) {
+                helper = 1;
+            } else if (nee2.getTranslateY() == 400) {
+                helper = 0;
+            }
+
+        }
+        System.out.println("Y : "+diffy);
+        return diffy;
+    }
+
     private Group createTCAS(){
         Group root = new Group();
 
@@ -765,7 +901,7 @@ public class EWD extends Application {
         map.setFill(Color.TRANSPARENT);
         map.setStroke(Color.WHITE);
 
-        System.out.println(map.getRadius());
+        //System.out.println(map.getRadius());
 
         Circle map1 = new Circle(400, 300, 90);
         map1.setFill(Color.TRANSPARENT);

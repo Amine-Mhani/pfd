@@ -193,7 +193,7 @@ public class Main extends Application {
 
                 if (distance < 200) {
 
-                    warning.play();
+                    // warning.play();
                     translate.setToY(120);
                     translate.play();
                     otherAircraft.setFill(Color.RED);
@@ -201,7 +201,7 @@ public class Main extends Application {
 
                 } else if (distance < 500) {
 
-                    warning.stop();
+                    // warning.stop();
                     translate.setToY(50);
                     translate.play();
 
@@ -209,7 +209,7 @@ public class Main extends Application {
                     //scene.setFill(Color.BLACK);
                 } else {
 
-                    warning.stop();
+                    // warning.stop();
                     translate.setToY(0);
                     translate.play();
 
@@ -401,14 +401,14 @@ public class Main extends Application {
                             lin2.setStroke(Color.RED);
                             cir2.setStroke(Color.RED);
 
-                            speed.play();
+                           // speed.play();
                         }else if(needPerc1.getRotate()+10>90){
                             lin1.setStroke(Color.YELLOW);
                             cir1.setStroke(Color.YELLOW);
                             lin2.setStroke(Color.YELLOW);
                             cir2.setStroke(Color.YELLOW);
 
-                           speed.stop();
+                          // speed.stop();
                         }else{
                             lin1.setStroke(Color.GREEN);
                             cir1.setStroke(Color.GREEN);
@@ -438,21 +438,21 @@ public class Main extends Application {
                             lin4.setStroke(Color.RED);
                             cir4.setStroke(Color.RED);
 
-                            heat.play();
+                           // heat.play();
                         }else if(needHeat1.getRotate()+5>110){
                             lin3.setStroke(Color.YELLOW);
                             cir3.setStroke(Color.YELLOW);
                             lin4.setStroke(Color.YELLOW);
                             cir4.setStroke(Color.YELLOW);
 
-                            heat.stop();
+                          //  heat.stop();
                         }else{
                             lin3.setStroke(Color.GREEN);
                             cir3.setStroke(Color.GREEN);
                             lin4.setStroke(Color.GREEN);
                             cir4.setStroke(Color.GREEN);
 
-                            heat.stop();
+                           // heat.stop();
                         }
 
                     }
@@ -497,21 +497,21 @@ public class Main extends Application {
                             lin4.setStroke(Color.RED);
                             cir4.setStroke(Color.RED);
 
-                            heat.play();
+                          //  heat.play();
                         }else if(needHeat1.getRotate()+5>110){
                             lin3.setStroke(Color.YELLOW);
                             cir3.setStroke(Color.YELLOW);
                             lin4.setStroke(Color.YELLOW);
                             cir4.setStroke(Color.YELLOW);
 
-                            heat.stop();
+                           // heat.stop();
                         }else{
                             lin3.setStroke(Color.GREEN);
                             cir3.setStroke(Color.GREEN);
                             lin4.setStroke(Color.GREEN);
                             cir4.setStroke(Color.GREEN);
 
-                            heat.stop();
+                           // heat.stop();
                         }
                     }
 
@@ -533,21 +533,21 @@ public class Main extends Application {
                             lin2.setStroke(Color.RED);
                             cir2.setStroke(Color.RED);
 
-                            speed.play();
+                           // speed.play();
                         }else if(needPerc1.getRotate()-10>90){
                             lin1.setStroke(Color.YELLOW);
                             cir1.setStroke(Color.YELLOW);
                             lin2.setStroke(Color.YELLOW);
                             cir2.setStroke(Color.YELLOW);
 
-                            speed.stop();
+                         //   speed.stop();
                         }else {
                             lin1.setStroke(Color.GREEN);
                             cir1.setStroke(Color.GREEN);
                             lin2.setStroke(Color.GREEN);
                             cir2.setStroke(Color.GREEN);
 
-                            speed.stop();
+                          //  speed.stop();
 
                         }
                     }
@@ -593,7 +593,7 @@ public class Main extends Application {
                     cir3.setStroke(Color.GREEN);
                     cir4.setStroke(Color.GREEN);
 
-                    heat.stop();
+                   // heat.stop();
 
 
                     heat1.setText("82");
@@ -628,21 +628,21 @@ public class Main extends Application {
                             lin4.setStroke(Color.RED);
                             cir4.setStroke(Color.RED);
 
-                            heat.play();
+                           // heat.play();
                         }else if(needHeat1.getRotate()+5>110){
                             lin3.setStroke(Color.YELLOW);
                             cir3.setStroke(Color.YELLOW);
                             lin4.setStroke(Color.YELLOW);
                             cir4.setStroke(Color.YELLOW);
 
-                            heat.stop();
+                           // heat.stop();
                         }else{
                             lin3.setStroke(Color.GREEN);
                             cir3.setStroke(Color.GREEN);
                             lin4.setStroke(Color.GREEN);
                             cir4.setStroke(Color.GREEN);
 
-                            heat.stop();
+                           // heat.stop();
                         }
                     }
 
@@ -694,7 +694,7 @@ public class Main extends Application {
 
         stage.setScene(scene);
         stage.setFullScreen(true);
-        mediaPlayer.play();
+        //mediaPlayer.play();
         stage.show();
 
     }
