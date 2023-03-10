@@ -4,6 +4,7 @@ import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.*;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 
@@ -118,6 +119,7 @@ public class Alt extends Application {
     TranslateTransition gloTrans, gloTrans2;
 
     Line nee, nee2;
+    Radar radar = new Radar();
 
 
 
@@ -130,7 +132,7 @@ public class Alt extends Application {
     }
 
     @Override
-    public void start(final Stage stage) {
+    public void start(final Stage stage) throws Exception {
         final Label pfd = new Label();
         final Label scale = new Label();
         final Label scale2 = new Label();
@@ -155,6 +157,7 @@ public class Alt extends Application {
         Pane planes = new Pane(pl, pl2);
 
         planes.setStyle("-fx-border-color: red; -fx-min-width: 1100; -fx-max-width: 1100; -fx-min-height: 450; -fx-max-height: 450");
+        pl.setTranslateY(300);
 
         monitored.setGraphic(planes);
 
@@ -271,9 +274,9 @@ public class Alt extends Application {
 
         Text fu1 = new Text("F. F");
         fu1.setFill(Color.BLUE);
-        Text fu2 = new Text("KG/H");
+        Text fu2 = new Text("KG");
         fu2.setFill(Color.WHITE);
-        Text lev = new Text("500");
+        Text lev = new Text("5000");
         lev.setFill(Color.GREEN);
 
 
@@ -340,6 +343,11 @@ public class Alt extends Application {
         VBox nd = new VBox();
         nd.getChildren().add(createNd());
 
+        VBox rad = new VBox();
+        rad.getChildren().add(radar.start());
+        //rad.setStyle("-fx-padding: 30");
+        rad.setPadding(new Insets(30, 0, 0, 0));
+
 
 
         VBox leftBox = new VBox(10);
@@ -347,7 +355,7 @@ public class Alt extends Application {
         leftBox.setStyle("-fx-background-color: transparent; -fx-padding: 5px; -fx-min-width: 1000; -fx-max-height: 100;");
 
         HBox downbox = new HBox(10);
-        downbox.getChildren().setAll(tcas, pane, nd);
+        downbox.getChildren().setAll(tcas, pane, nd, rad);
         downbox.setStyle("-fx-background-color: transparent; -fx-padding: 5px; -fx-min-width: 200; -fx-max-height: 100");
 
 
@@ -389,6 +397,9 @@ public class Alt extends Application {
         monitored.setOnMouseMoved(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                if(Double.parseDouble(lev.getText()) != 0.5) {
+                    lev.setText(String.valueOf(Double.parseDouble(lev.getText()) - 0.5));
+                }
                 pl2.setLayoutX(event.getX());
                 pl2.setLayoutY(event.getY()-50);
                 double x = onDxChange(event.getX());
@@ -590,10 +601,6 @@ public class Alt extends Application {
                 }
             }
         });
-
-
-
-
 
 
         scene.setOnKeyPressed(event -> {
@@ -1103,7 +1110,7 @@ public class Alt extends Application {
         lineChart.setVerticalZeroLineVisible(true);
 
         lineChart.lookup(".chart-plot-background").setStyle("-fx-background:black;");
-        lineChart.setPrefSize(650, 400);
+        lineChart.setPrefSize(350, 400);
 //defining series to display data
         XYChart.Series<String, Number> series1 = new XYChart.Series<>();
         Platform.runLater(() ->
