@@ -121,6 +121,8 @@ public class Alt extends Application {
     Line nee, nee2;
     Radar radar = new Radar();
 
+    Double dist;
+
 
 
 
@@ -400,13 +402,14 @@ public class Alt extends Application {
                 if(Double.parseDouble(lev.getText()) != 0.5) {
                     lev.setText(String.valueOf(Double.parseDouble(lev.getText()) - 0.5));
                 }
+                //System.out.println("x jet: "+X+" , y jet: "+Y+" | x tanker: "+pl.getTranslateX()+" , y tanker: "+pl.getTranslateY());
                 pl2.setLayoutX(event.getX());
                 pl2.setLayoutY(event.getY()-50);
                 double x = onDxChange(event.getX());
                 double y = onDYChange(event.getY());
                 X = x;
                 Y = y;
-                System.out.println("moved");
+                //System.out.println("moved");
                 String msg =
                         "(x: " + event.getX() + ", y: " + event.getY() + ") -- " +
                                 "(sceneX: " + event.getSceneX() + ", sceneY: " + event.getSceneY() + ") -- " +
@@ -416,6 +419,7 @@ public class Alt extends Application {
                 double dx = event.getScreenX() - plTopLeftOnScreen.getX();
                 double dy = event.getScreenY() - plTopLeftOnScreen.getY();
                 distance = Math.sqrt(dx * dx + dy * dy) - 218;
+                dist = distance;
 
                 //System.out.println("dx : "+dx+", dy : "+dy);
 
@@ -499,7 +503,7 @@ public class Alt extends Application {
 
             @Override
             public void handle(MouseEvent mouseEvent) {
-                System.out.println("mouse button : "+mouseEvent.getButton());
+                //System.out.println("mouse button : "+mouseEvent.getButton());
                 if(mouseEvent.getButton() == MouseButton.PRIMARY){
                     if(needle.getTranslateY() != 0){
                         //needle.setTranslateY(needle.getTranslateY()-5);
@@ -611,7 +615,7 @@ public class Alt extends Application {
                 switch (event.getCode()) {
                     case G:
                         isAuto = !isAuto;
-                        System.out.println("switch to manual");
+                        //System.out.println("switch to manual");
 
                         manualPlayer.play();
 
@@ -623,7 +627,7 @@ public class Alt extends Application {
                 switch (event.getCode()) {
                     case G:
                         isAuto = !isAuto;
-                        System.out.println("switch to auto ");
+                        //System.out.println("switch to auto ");
                         animateScrollPaneVvalue(scrollPane, 0.5);
                         autoPilotPlayer.play();
                         break;
@@ -817,7 +821,7 @@ public class Alt extends Application {
 
                         break;
                     case LEFT:
-                        System.out.println("ne "+needle2.getTranslateY());
+                        //System.out.println("ne "+needle2.getTranslateY());
                         //needle.setTranslateY(350);
                         transition.setToY(400);
                         transition.play();
@@ -890,7 +894,7 @@ public class Alt extends Application {
 
 
 
-                        System.out.println("v : "+vvalue);
+                        //System.out.println("v : "+vvalue);
                         if(vvalue > 0.5) {
                             vvalue = 0.5;
                             //scrollPane.setVvalue(vvalue);
@@ -932,6 +936,8 @@ public class Alt extends Application {
                         }
 
                         break;
+                    case W:
+                        System.out.println("la distance est : "+dist);
                     default:
                         break;
                 }
@@ -963,14 +969,14 @@ public class Alt extends Application {
 
     public double onDxChange(double diffx){
         double ddx = X + diffx;
-        System.out.println("X : "+diffx);
+        //System.out.println("X : "+diffx);
         return diffx;
     }
 
     public double onDYChange(double diffy){
         double ddy = Y + diffy;
         double dif = Y - diffy;
-        System.out.println("nee2: "+nee2.getTranslateY());
+        //System.out.println("nee2: "+nee2.getTranslateY());
         double vvalue = scp.getVvalue();
         double targetVvalueUp = vvalue + ddy;
         //System.out.println("ddy : "+targetVvalueUp/1000+" vvalue : "+scp.getVvalue());
@@ -982,7 +988,7 @@ public class Alt extends Application {
             //System.out.println("vvalue : "+scp.getVvalue());
         }
         if(dif > 0) {
-            System.out.println("up");
+            //System.out.println("up");
 
             if ((diffy <= 400) && (diffy >= 0)) {
                 //needle.setTranslateY(needle.getTranslateY()-5);
@@ -1001,7 +1007,7 @@ public class Alt extends Application {
                 helper = 0;
             }
         } else{
-            System.out.println("down");
+            //System.out.println("down");
 
 
             if((diffy <= 400) && (diffy >= 0)){
@@ -1022,7 +1028,7 @@ public class Alt extends Application {
             }
 
         }
-        System.out.println("Y : "+diffy);
+        //System.out.println("Y : "+diffy);
         return diffy;
     }
 
