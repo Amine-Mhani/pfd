@@ -31,6 +31,8 @@ import javafx.stage.Stage;
 
 import javafx.scene.media.Media;
 import javafx.util.Duration;
+import ma.ensaj.dem1.model.AudioReceiver;
+import ma.ensaj.dem1.model.AudioSender;
 
 
 import java.io.File;
@@ -775,6 +777,9 @@ public class Main extends Application {
         root.getChildren().addAll(map, map1, map2, ticks, ownAircraft);
 
         // Check for collisions and update colors
+
+
+
 
 
         return root;

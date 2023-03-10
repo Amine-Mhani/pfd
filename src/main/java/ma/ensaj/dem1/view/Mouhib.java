@@ -4,7 +4,6 @@ import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.*;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 
@@ -18,7 +17,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 
@@ -116,14 +114,6 @@ public class Mouhib extends Application {
 
     TranslateTransition translate = new TranslateTransition(Duration.seconds(1), otherAircraft);
 
-    TranslateTransition gloTrans, gloTrans2;
-
-    Line nee, nee2;
-    Radar radar = new Radar();
-
-    Double dist;
-
-
 
 
 
@@ -134,7 +124,7 @@ public class Mouhib extends Application {
     }
 
     @Override
-    public void start(final Stage stage) throws Exception {
+    public void start(final Stage stage) {
         final Label pfd = new Label();
         final Label scale = new Label();
         final Label scale2 = new Label();
@@ -159,10 +149,8 @@ public class Mouhib extends Application {
         Pane planes = new Pane(pl, pl2);
 
         planes.setStyle("-fx-border-color: red; -fx-min-width: 1100; -fx-max-width: 1100; -fx-min-height: 450; -fx-max-height: 450");
-        pl.setTranslateY(300);
 
         monitored.setGraphic(planes);
-
 
 
         // Scale line
@@ -181,17 +169,12 @@ public class Mouhib extends Application {
         needle.setRotate(90);
         needle.setTranslateY(Translation);
 
-        nee = needle;
-
-
         // Needle
         Line needle2 = new Line(CENTER_X, 100, CENTER_X, 0);
         needle2.setStroke(Color.RED);
         needle2.setStrokeWidth(4);
         needle2.setRotate(90);
         needle2.setTranslateY(Translation);
-
-        nee2 = needle2;
 
 
 
@@ -231,16 +214,67 @@ public class Mouhib extends Application {
         tcas.getChildren().add(otherAircraft);
 
 
+        monitored.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                pl2.setLayoutX(event.getX());
+                pl2.setLayoutY(event.getY()-50);
+                double x = onDxChange(event.getX());
+                double y = onDYChange(event.getY());
+                X = x;
+                Y = y;
+                System.out.println("moved");
+                String msg =
+                        "(x: " + event.getX() + ", y: " + event.getY() + ") -- " +
+                                "(sceneX: " + event.getSceneX() + ", sceneY: " + event.getSceneY() + ") -- " +
+                                "(screenX: " + event.getScreenX() + ", screenY: " + event.getScreenY() + ")";
+
+                Point2D plTopLeftOnScreen = pl.localToScreen(0, 0);
+                double dx = event.getScreenX() - plTopLeftOnScreen.getX();
+                double dy = event.getScreenY() - plTopLeftOnScreen.getY();
+                distance = Math.sqrt(dx * dx + dy * dy) - 218;
+
+                //System.out.println("dx : "+dx+", dy : "+dy);
+
+                if (distance < 200) {
+
+                    //warning.play();
+                    translate.setToY(120);
+                    translate.play();
+                    otherAircraft.setFill(Color.RED);
+                    //scene.setFill(Color.RED);
+
+                } else if (distance < 500) {
+
+                    //warning.stop();
+                    translate.setToY(50);
+                    translate.play();
+
+                    otherAircraft.setFill(Color.YELLOW);
+                    //scene.setFill(Color.BLACK);
+                } else {
+
+                    //warning.stop();
+                    translate.setToY(0);
+                    translate.play();
+
+                    otherAircraft.setFill(Color.GREEN);
+                    //scene.setFill(Color.BLACK);
+                }
 
 
-        TranslateTransition transition = new TranslateTransition(Duration.seconds(0.5), needle);
-        TranslateTransition transition2 = new TranslateTransition(Duration.seconds(0.5), needle2);
-        gloTrans = transition;
-        gloTrans2 = transition2;
-        transition.setInterpolator(Interpolator.EASE_OUT);
-        transition2.setInterpolator(Interpolator.EASE_OUT);
 
+                /**if (dx>=-17 && dx<=-14){
+                 if (dy>=93.00000000000003 && dy<=95.00000000000003){
+                 System.out.println("fuelling");
+                 }
+                 }*/
 
+                //dx = -15
+                //dy = 89.00000000000003
+                //System.out.println("Distance to pl: " + distance);
+            }
+        });
 
 
         scale.setGraphic(new Group(scaleLine, tickPane, needle));
@@ -276,9 +310,9 @@ public class Mouhib extends Application {
 
         Text fu1 = new Text("F. F");
         fu1.setFill(Color.BLUE);
-        Text fu2 = new Text("KG");
+        Text fu2 = new Text("KG/H");
         fu2.setFill(Color.WHITE);
-        Text lev = new Text("5000");
+        Text lev = new Text("500");
         lev.setFill(Color.GREEN);
 
 
@@ -345,11 +379,6 @@ public class Mouhib extends Application {
         VBox nd = new VBox();
         nd.getChildren().add(createNd());
 
-        VBox rad = new VBox();
-        rad.getChildren().add(radar.start());
-        //rad.setStyle("-fx-padding: 30");
-        rad.setPadding(new Insets(30, 0, 0, 0));
-
 
 
         VBox leftBox = new VBox(10);
@@ -357,7 +386,7 @@ public class Mouhib extends Application {
         leftBox.setStyle("-fx-background-color: transparent; -fx-padding: 5px; -fx-min-width: 1000; -fx-max-height: 100;");
 
         HBox downbox = new HBox(10);
-        downbox.getChildren().setAll(tcas, pane, nd, rad);
+        downbox.getChildren().setAll(tcas, pane, nd);
         downbox.setStyle("-fx-background-color: transparent; -fx-padding: 5px; -fx-min-width: 200; -fx-max-height: 100");
 
 
@@ -396,215 +425,12 @@ public class Mouhib extends Application {
 
         root.setStyle("-fx-background-color: transparent; -fx-padding: 10px;");
 
-        monitored.setOnMouseMoved(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if(Double.parseDouble(lev.getText()) != 0.5) {
-                    lev.setText(String.valueOf(Double.parseDouble(lev.getText()) - 0.5));
-                }
-                //System.out.println("x jet: "+X+" , y jet: "+Y+" | x tanker: "+pl.getTranslateX()+" , y tanker: "+pl.getTranslateY());
-                pl2.setLayoutX(event.getX());
-                pl2.setLayoutY(event.getY()-50);
-                double x = onDxChange(event.getX());
-                double y = onDYChange(event.getY());
-                X = x;
-                Y = y;
-                //System.out.println("moved");
-                String msg =
-                        "(x: " + event.getX() + ", y: " + event.getY() + ") -- " +
-                                "(sceneX: " + event.getSceneX() + ", sceneY: " + event.getSceneY() + ") -- " +
-                                "(screenX: " + event.getScreenX() + ", screenY: " + event.getScreenY() + ")";
 
-                Point2D plTopLeftOnScreen = pl.localToScreen(0, 0);
-                double dx = event.getScreenX() - plTopLeftOnScreen.getX();
-                double dy = event.getScreenY() - plTopLeftOnScreen.getY();
-                distance = Math.sqrt(dx * dx + dy * dy) - 218;
-                dist = distance;
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(0.5), needle);
+        TranslateTransition transition2 = new TranslateTransition(Duration.seconds(0.5), needle2);
+        transition.setInterpolator(Interpolator.EASE_OUT);
+        transition2.setInterpolator(Interpolator.EASE_OUT);
 
-                //System.out.println("dx : "+dx+", dy : "+dy);
-
-                if (distance < 200) {
-
-                    //warning.play();
-                    translate.setToY(120);
-                    translate.play();
-                    otherAircraft.setFill(Color.RED);
-                    //scene.setFill(Color.RED);
-
-                } else if (distance < 500) {
-
-                    //warning.stop();
-                    translate.setToY(50);
-                    translate.play();
-
-                    otherAircraft.setFill(Color.YELLOW);
-                    //scene.setFill(Color.BLACK);
-                } else {
-
-                    //warning.stop();
-                    translate.setToY(0);
-                    translate.play();
-
-                    otherAircraft.setFill(Color.GREEN);
-                    //scene.setFill(Color.BLACK);
-                }
-
-                if(!((needHeat1.getRotate()+10)>180)) {
-                    Timeline timeline = new Timeline(
-                            new KeyFrame(Duration.seconds(0.5),
-                                    new KeyValue(needHeat1.rotateProperty(), needHeat1.getRotate() + 5),
-                                    new KeyValue(needHeat2.rotateProperty(), needHeat2.getRotate() + 5)
-
-                            )
-                    );
-                    timeline.play();
-
-                    heat1.setText(String.valueOf(Math.round(needHeat1.getRotate()+1)));
-                    heat2.setText(String.valueOf(Math.round(needHeat2.getRotate()+1)));
-
-                    if(needHeat1.getRotate()+1>130){
-                        lin3.setStroke(Color.RED);
-                        cir3.setStroke(Color.RED);
-                        lin4.setStroke(Color.RED);
-                        cir4.setStroke(Color.RED);
-
-                        //warning.play();
-                    }else if(needHeat1.getRotate()+1>110){
-                        lin3.setStroke(Color.YELLOW);
-                        cir3.setStroke(Color.YELLOW);
-                        lin4.setStroke(Color.YELLOW);
-                        cir4.setStroke(Color.YELLOW);
-
-                        warning.stop();
-                    }else{
-                        lin3.setStroke(Color.GREEN);
-                        cir3.setStroke(Color.GREEN);
-                        lin4.setStroke(Color.GREEN);
-                        cir4.setStroke(Color.GREEN);
-                    }
-
-                }
-
-
-
-                /**if (dx>=-17 && dx<=-14){
-                 if (dy>=93.00000000000003 && dy<=95.00000000000003){
-                 System.out.println("fuelling");
-                 }
-                 }*/
-
-                //dx = -15
-                //dy = 89.00000000000003
-                //System.out.println("Distance to pl: " + distance);
-            }
-        });
-
-        monitored.setOnMouseClicked(new EventHandler<MouseEvent>(){
-
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                //System.out.println("mouse button : "+mouseEvent.getButton());
-                if(mouseEvent.getButton() == MouseButton.PRIMARY){
-                    if(needle.getTranslateY() != 0){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition.setToY(needle.getTranslateY()-50);
-                        transition.play();
-                    }
-                    if(!((needPerc1.getRotate()+20)>180)) {
-                        Timeline timeline = new Timeline(
-                                new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needPerc1.rotateProperty(), needPerc1.getRotate() + 20),
-                                        new KeyValue(needPerc2.rotateProperty(), needPerc2.getRotate() + 20)
-
-                                )
-                        );
-                        timeline.play();
-                        perc1.setText(String.valueOf(Math.round(needPerc1.getRotate()+20)));
-                        perc2.setText(String.valueOf(Math.round(needPerc2.getRotate()+20)));
-
-                        if(needPerc1.getRotate()+20>=140){
-                            lin1.setStroke(Color.RED);
-                            cir1.setStroke(Color.RED);
-                            lin2.setStroke(Color.RED);
-                            cir2.setStroke(Color.RED);
-
-                            //warning.play();
-                        }else if(needPerc1.getRotate()+20>100){
-                            lin1.setStroke(Color.YELLOW);
-                            cir1.setStroke(Color.YELLOW);
-                            lin2.setStroke(Color.YELLOW);
-                            cir2.setStroke(Color.YELLOW);
-
-                            warning.stop();
-                        }else{
-                            lin1.setStroke(Color.GREEN);
-                            cir1.setStroke(Color.GREEN);
-                            lin2.setStroke(Color.GREEN);
-                            cir2.setStroke(Color.GREEN);
-                        }
-
-
-                    }
-                } else if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-                    if(needle.getTranslateY() != 400){
-                        //needle.setTranslateY(needle.getTranslateY()-5);
-                        transition.setToY(needle.getTranslateY()+50);
-                        transition.play();
-                    }
-                    if(needPerc1.getRotate()>20) {
-                        Timeline timeline = new Timeline(
-                                new KeyFrame(Duration.seconds(0.5),
-                                        new KeyValue(needPerc1.rotateProperty(), needPerc1.getRotate() - 20),
-                                        new KeyValue(needPerc2.rotateProperty(), needPerc2.getRotate() - 20)
-                                )
-                        );
-                        timeline.play();
-
-                        perc1.setText(String.valueOf(Math.round(needPerc1.getRotate()-20)));
-                        perc2.setText(String.valueOf(Math.round(needPerc2.getRotate()-20)));
-
-                        if(needPerc1.getRotate()-20>=140){
-                            lin1.setStroke(Color.RED);
-                            cir1.setStroke(Color.RED);
-                            lin2.setStroke(Color.RED);
-                            cir2.setStroke(Color.RED);
-
-                            //warning.play();
-                        }else if(needPerc1.getRotate()-20>100){
-                            lin1.setStroke(Color.YELLOW);
-                            cir1.setStroke(Color.YELLOW);
-                            lin2.setStroke(Color.YELLOW);
-                            cir2.setStroke(Color.YELLOW);
-
-                            warning.stop();
-                        }else {
-                            lin1.setStroke(Color.GREEN);
-                            cir1.setStroke(Color.GREEN);
-                            lin2.setStroke(Color.GREEN);
-                            cir2.setStroke(Color.GREEN);
-
-                        }
-                    }
-                } else if (mouseEvent.getButton() == MouseButton.MIDDLE) {
-                    Timeline timeline2 = new Timeline(
-                            new KeyFrame(Duration.seconds(0.5),
-                                    new KeyValue(needHeat1.rotateProperty(), 82.22),
-                                    new KeyValue(needHeat2.rotateProperty(), 82.22)
-                            )
-                    );
-                    timeline2.play();
-
-                    lin3.setStroke(Color.GREEN);
-                    lin4.setStroke(Color.GREEN);
-                    cir3.setStroke(Color.GREEN);
-                    cir4.setStroke(Color.GREEN);
-
-
-                    heat1.setText("82");
-                    heat2.setText("82");
-                }
-            }
-        });
 
 
         scene.setOnKeyPressed(event -> {
@@ -615,7 +441,7 @@ public class Mouhib extends Application {
                 switch (event.getCode()) {
                     case G:
                         isAuto = !isAuto;
-                        //System.out.println("switch to manual");
+                        System.out.println("switch to manual");
 
                         manualPlayer.play();
 
@@ -627,7 +453,7 @@ public class Mouhib extends Application {
                 switch (event.getCode()) {
                     case G:
                         isAuto = !isAuto;
-                        //System.out.println("switch to auto ");
+                        System.out.println("switch to auto ");
                         animateScrollPaneVvalue(scrollPane, 0.5);
                         autoPilotPlayer.play();
                         break;
@@ -821,7 +647,7 @@ public class Mouhib extends Application {
 
                         break;
                     case LEFT:
-                        //System.out.println("ne "+needle2.getTranslateY());
+                        System.out.println("ne "+needle2.getTranslateY());
                         //needle.setTranslateY(350);
                         transition.setToY(400);
                         transition.play();
@@ -894,7 +720,7 @@ public class Mouhib extends Application {
 
 
 
-                        //System.out.println("v : "+vvalue);
+                        System.out.println("v : "+vvalue);
                         if(vvalue > 0.5) {
                             vvalue = 0.5;
                             //scrollPane.setVvalue(vvalue);
@@ -936,8 +762,6 @@ public class Mouhib extends Application {
                         }
 
                         break;
-                    case W:
-                        System.out.println("la distance est : "+dist);
                     default:
                         break;
                 }
@@ -969,66 +793,23 @@ public class Mouhib extends Application {
 
     public double onDxChange(double diffx){
         double ddx = X + diffx;
-        //System.out.println("X : "+diffx);
+        System.out.println("X : "+diffx);
         return diffx;
     }
 
     public double onDYChange(double diffy){
         double ddy = Y + diffy;
-        double dif = Y - diffy;
-        //System.out.println("nee2: "+nee2.getTranslateY());
         double vvalue = scp.getVvalue();
         double targetVvalueUp = vvalue + ddy;
-        //System.out.println("ddy : "+targetVvalueUp/1000+" vvalue : "+scp.getVvalue());
+        System.out.println("ddy : "+targetVvalueUp/1000+" vvalue : "+scp.getVvalue());
         if(targetVvalueUp/1000 > 0.09 || -0.09 > targetVvalueUp/1000) {
             animateScrollPaneVvalue(scp, targetVvalueUp / 1000);
         }else{
-            //System.out.println("ok ok ");
+            System.out.println("ok ok ");
             animateScrollPaneVvalue(scp, 0.5);
-            //System.out.println("vvalue : "+scp.getVvalue());
+            System.out.println("vvalue : "+scp.getVvalue());
         }
-        if(dif > 0) {
-            //System.out.println("up");
-
-            if ((diffy <= 400) && (diffy >= 0)) {
-                //needle.setTranslateY(needle.getTranslateY()-5);
-                gloTrans2.setToY(diffy);
-                gloTrans2.play();
-            }
-            if (nee2.getTranslateY() > 0 && nee2.getTranslateY() < 100) {
-                helper = 4;
-            } else if (nee2.getTranslateY() > 100 && nee2.getTranslateY() < 200) {
-                helper = 3;
-            } else if (nee2.getTranslateY() > 200 && nee2.getTranslateY() < 300) {
-                helper = 2;
-            } else if (nee2.getTranslateY() > 300 && nee2.getTranslateY() < 400) {
-                helper = 1;
-            } else if (nee2.getTranslateY() == 400) {
-                helper = 0;
-            }
-        } else{
-            //System.out.println("down");
-
-
-            if((diffy <= 400) && (diffy >= 0)){
-                //needle.setTranslateY(needle.getTranslateY()-5);
-                gloTrans2.setToY(diffy);
-                gloTrans2.play();
-            }
-            if (nee2.getTranslateY() > 0 && nee2.getTranslateY() < 100) {
-                helper = 4;
-            } else if (nee2.getTranslateY() > 100 && nee2.getTranslateY() < 200) {
-                helper = 3;
-            } else if (nee2.getTranslateY() > 200 && nee2.getTranslateY() < 300) {
-                helper = 2;
-            } else if (nee2.getTranslateY() > 300 && nee2.getTranslateY() < 400) {
-                helper = 1;
-            } else if (nee2.getTranslateY() == 400) {
-                helper = 0;
-            }
-
-        }
-        //System.out.println("Y : "+diffy);
+        System.out.println("Y : "+diffy);
         return diffy;
     }
 
@@ -1116,7 +897,7 @@ public class Mouhib extends Application {
         lineChart.setVerticalZeroLineVisible(true);
 
         lineChart.lookup(".chart-plot-background").setStyle("-fx-background:black;");
-        lineChart.setPrefSize(350, 400);
+        lineChart.setPrefSize(650, 400);
 //defining series to display data
         XYChart.Series<String, Number> series1 = new XYChart.Series<>();
         Platform.runLater(() ->
