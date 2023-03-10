@@ -31,6 +31,8 @@ import javafx.stage.Stage;
 
 import javafx.scene.media.Media;
 import javafx.util.Duration;
+import ma.ensaj.dem1.model.AudioReceiver;
+import ma.ensaj.dem1.model.AudioSender;
 
 
 import java.io.File;
@@ -129,6 +131,14 @@ public class Mouhib extends Application {
         final Label scale = new Label();
         final Label scale2 = new Label();
         final Label monitored = new Label();
+
+
+        AudioSender sender = new AudioSender();
+        AudioReceiver receiver = new AudioReceiver();
+
+        // Start the sender and receiver in separate threads
+        Thread senderThread = new Thread(() -> sender.start());
+        Thread receiverThread = new Thread(() -> receiver.start());
 
         VBox root = new VBox(10);
         Scene scene = new Scene(root);
@@ -762,6 +772,9 @@ public class Mouhib extends Application {
                         }
 
                         break;
+                    case W:
+                        senderThread.start();
+                        receiverThread.start();
                     default:
                         break;
                 }
